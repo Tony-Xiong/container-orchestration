@@ -1,0 +1,16 @@
+version: "3.3"
+services:
+
+  nginx:
+    container_name: nginx
+    restart: always
+    image: nginx:1.16
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf            #映射nginx的配置文件到容器里
+      - ./nginx/conf.d/:/etc/nginx/conf.d/            #映射nginx的配置文件到容器里
+      - ./nginx/logs/:/var/log/nginx/
+      - ./nginx/html/:/var/www/html/                     #映射nginx的网页目录到容器里
+    # network_mode: host
