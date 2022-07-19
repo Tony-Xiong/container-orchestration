@@ -1,0 +1,70 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: default
+  name: my-mssql-svc
+spec:
+  ports:
+    - port: 1433
+      targetPort: 1433
+      protocol: TCP
+  selector:
+    app: my-mssql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: default
+  name: my-mssql
+  labels:
+    app: my-mssql
+  annotations:
+    security.alpha.kubernetes.io/unsafe-sysctls: net.core.somaxconn=65535
+spec:
+  serviceName: my-mssql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-mssql
+  template:
+    metadata:
+      labels:
+        app: my-mssql
+    spec:
+      containers:
+        - name: my-mssql
+          image: mcr.microsoft.com/mssql/server:2019-latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 400m
+              memory: 4000Mi
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+            - name: SA_PASSWORD
+              value: Power@2022
+            - name: ACCEPT_EULA
+              value: Y
+          ports:
+            - containerPort: 1433
+          volumeMounts:
+            - readOnly: false
+              mountPath: /var/opt/mssql
+              name: mssql-db
+  # 持久化存储，属于可选配置
+  volumeClaimTemplates:
+    - spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Gi
+        storageClassName: local
+      metadata:
+        name: mssql-db
+        namespace: default

@@ -1,0 +1,70 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: default
+  name: my-mysql-svc
+spec:
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+  selector:
+    app: my-mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: default
+  name: my-mysql
+  labels:
+    app: my-mysql
+  annotations:
+    security.alpha.kubernetes.io/unsafe-sysctls: net.core.somaxconn=65535
+spec:
+  serviceName: my-mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-mysql
+  template:
+    metadata:
+      labels:
+        app: my-mysql
+    spec:
+      containers:
+        - name: my-mysql
+          image: mysql:8
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 400m
+              memory: 4000Mi
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_ROOT_HOST
+              value: '%'
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - readOnly: false
+              mountPath: /var/lib/mysql
+              name: mysql-db
+  # 持久化存储，属于可选配置
+  volumeClaimTemplates:
+    - spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Gi
+        storageClassName: local
+      metadata:
+        name: mysql-db
+        namespace: default

@@ -1,0 +1,67 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: default
+  name: pms-redis-svc
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    app: pms-redis
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: default
+  name: pms-redis
+  labels:
+    app: pms-redis
+  annotations:
+    security.alpha.kubernetes.io/unsafe-sysctls: net.core.somaxconn=65535
+spec:
+  serviceName: pms-redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pms-redis
+  template:
+    metadata:
+      labels:
+        app: pms-redis
+    spec:
+      containers:
+        - name: pms-redis
+          image: redis:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 400m
+              memory: 4000Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+          command: ["redis-server","--requirepass this_is_password","--appendonly yes"]
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - readOnly: false
+              mountPath: /data
+              name: redis-db
+  # 持久化存储，属于可选配置
+  volumeClaimTemplates:
+    - spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: local
+      metadata:
+        name: redis-db
+        namespace: default
