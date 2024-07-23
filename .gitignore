@@ -15,3 +15,5 @@
 # vendor/
 
 .DS_store
+kafka/data
+kafka/kafka-logs

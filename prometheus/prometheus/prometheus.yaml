@@ -28,7 +28,11 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # - job_name: 'nacos'
-  #   metrics_path: '/nacos/actuator/prometheus'
-  #   static_configs:
-  #     - targets: ['nacos:8848']
+  - job_name: 'spring'
+    scrape_interval: 5s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+        - targets: ["192.168.80.130:8080"]
+        - labels: 
+            instance: "springboot2-prometheus"
+            service: "springboot2-prometheus-service"
