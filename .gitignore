@@ -15,5 +15,12 @@
 # vendor/
 
 .DS_store
+
 kafka/data
 kafka/kafka-logs
+
+.fleet
+
+.idea
+
+.vscode
